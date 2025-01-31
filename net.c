@@ -4,10 +4,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <poll.h>
+
+#define NCP_POLL_TIMEOUT_MS 1000
 
 [[nodiscard]] int net_init(struct net * ctx, uint16_t port, int listen_queue)
 {
-    ctx->sock = socket(AF_INET, SOCK_STREAM, 0);
+    ctx->sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if(ctx->sock < 0){
         perror("could not create socket");
         return 1;
@@ -52,6 +55,30 @@ void net_deinit(struct net * ctx)
 
 [[nodiscard]] int net_client_pickup(struct net * ctx, int * sock)
 {
+    struct pollfd sock_poll = {
+        .fd = ctx->sock,
+        .events = POLLIN, // you can `|` together multiple events
+    };
+
+    {
+        int ret = poll(& sock_poll, 1, NCP_POLL_TIMEOUT_MS);
+
+        if(ret == 0){
+            // timeout
+            return 1;
+        }else if(ret == 1){
+            // event
+        }else if(ret < 0){
+            // error
+            perror("poll");
+            return 1;
+        }else{
+            // unreachable
+            fprintf(stderr, "ERROR: unreachable code reached\n");
+            return 1;
+        }
+    }
+
     * sock = accept(ctx->sock, NULL, NULL);
     if(* sock < 0){
         perror("could not accept client");

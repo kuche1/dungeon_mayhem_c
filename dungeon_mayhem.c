@@ -13,18 +13,19 @@ int main(void)
         return 1;
     }
 
-    while(1)
+    int shutting_down = 0;
+    while(!shutting_down)
     {
         int cli_sock;
         if(net_client_pickup(& net, & cli_sock)){
             continue;
         }
 
-        printf("client pick up\n");
+        printf("client pick up (%d)\n", cli_sock);
 
         net_client_hangup(cli_sock);
 
-        printf("client hang up\n");
+        printf("client hang up (%d)\n", cli_sock);
     }
 
     net_deinit(& net);
