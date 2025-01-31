@@ -1,5 +1,6 @@
 
 #include "net.h"
+#include "buf.h"
 
 #include <stdio.h>
 
@@ -14,6 +15,10 @@ int main(void)
     }
 
     int shutting_down = 0;
+
+    struct buf clients;
+    buf_init(& clients);
+
     while(!shutting_down)
     {
         int cli_sock;
@@ -22,6 +27,12 @@ int main(void)
         }
 
         printf("client pick up (%d)\n", cli_sock);
+
+        buf_append(& clients, cli_sock);
+
+        printf("buf len %ld\n", clients.len);
+
+        buf_remove(& clients, cli_sock);
 
         net_client_hangup(cli_sock);
 
