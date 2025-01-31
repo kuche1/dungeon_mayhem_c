@@ -9,6 +9,7 @@ CC := gcc
 
 CFLAGS := -std=c99
 CFLAGS += -Werror -Wextra -Wall -pedantic -Wfatal-errors -Wshadow
+CFLAGS += -fwrapv # make signed integer operations defined
 
 .PHONY: all
 all: $(EXECUTABLE)

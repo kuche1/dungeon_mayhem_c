@@ -46,11 +46,11 @@ static void * client_handler_thread(void * voidp_args)
 
     while(!*args->shutting_down)
     {
-        buf_iter_start(args->clients);
+        buf_iter_begin(args->clients);
 
         if(args->clients->len <= 0){
             printf("client_handler_thread: no clients, sleeping\n");
-            buf_iter_stop(args->clients);
+            buf_iter_end(args->clients);
             sleep(1);
             continue;
         }
@@ -60,11 +60,11 @@ static void * client_handler_thread(void * voidp_args)
 
         for(size_t i=0; i<polls_len; ++i)
         {
-            polls[i].fd = buf_get(args->clients, i); // it IS valid to set this to <0 (its just going to get ignored)
+            polls[i].fd = * (int *) buf_get(args->clients, i); // it IS valid to set fd to <0 (its just going to get ignored)
             polls[i].events = POLLIN;
         }
 
-        buf_iter_stop(args->clients);
+        buf_iter_end(args->clients);
 
         printf("client_handler_thread: waiting for event\n");
 
@@ -88,7 +88,7 @@ static void * client_handler_thread(void * voidp_args)
 
                 printf("client_handler_thread: event on fd %d\n", fd);
 
-                buf_remove(args->clients, fd);
+                buf_remove(args->clients, & fd);
 
                 net_client_hangup(fd);
 

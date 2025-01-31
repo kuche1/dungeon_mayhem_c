@@ -2,10 +2,7 @@
 #include "buf.h"
 
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-
-#define BUF_INITIAL_SIZE 1 // this must be at least 1
 
 static void lock(pthread_mutex_t * lock)
 {
@@ -23,20 +20,19 @@ static void unlock(pthread_mutex_t * lock)
     }
 }
 
-void buf_init(struct buf * ctx, size_t item_size)
+void buf_init(struct buf * ctx)
 {
-    ctx->mem = malloc(item_size * BUF_INITIAL_SIZE);
+    ctx->mem = malloc(sizeof(BUF_ITEM_TYPE));
     if(!ctx->mem){
         fprintf(stderr, "ERROR: out of memory\n");
         exit(1);
     }
-    ctx->item_size = item_size;
 
     ctx->len = 0;
-    ctx->size = BUF_INITIAL_SIZE;
+    ctx->size = 1; // this must not start as <= 0
 
     if(pthread_mutex_init(& ctx->lock, NULL)){
-        fprintf(stderr, "ERROR: could not initialize buf lock\n");
+        fprintf(stderr, "ERROR: could not initialize buf lock\n"); 
         exit(1);
     }
 }
@@ -46,16 +42,14 @@ void buf_deinit(struct buf * ctx)
     if(pthread_mutex_destroy(& ctx->lock)){
         fprintf(stderr, "ERROR: could not deinitialize buf lock");
     }
-
-    free(ctx->mem);
 }
 
-void * buf_append_begin(struct buf * ctx)
+void buf_append(struct buf * ctx, BUF_ITEM_TYPE item)
 {
     lock(& ctx->lock);
 
     if(ctx->len == ctx->size){
-        void * new = realloc(ctx->mem, ctx->item_size * ctx->size * 2);
+        void * new = realloc(ctx->mem, sizeof(BUF_ITEM_TYPE) * ctx->size * 2);
         if(!new){
             fprintf(stderr, "ERROR: out of memory\n");
             exit(1);
@@ -65,29 +59,24 @@ void * buf_append_begin(struct buf * ctx)
         ctx->size *= 2;
     }
 
-    void * ret = & ctx->mem[ctx->item_size * ctx->len];
+    ctx->mem[ctx->len] = item;
     ctx->len += 1;
 
-    return ret;
-}
-
-void buf_append_end(struct buf * ctx)
-{
     unlock(& ctx->lock);
 }
 
-void buf_remove(struct buf * ctx, void * item)
+void buf_remove(struct buf * ctx, BUF_ITEM_TYPE item)
 {
     lock(& ctx->lock);
 
     for(size_t i=0; i<ctx->len; ++i)
     {
-        if(memcmp(& ctx->mem[ctx->item_size * i], item, ctx->item_size) == 0){ // NOTE: this can be very expensive, perhaps we should be removing by index instead
+        if(ctx->mem[i] == item){
             if((ctx->len >= 2) && (i != ctx->len - 1)){
-                memcpy(& ctx->mem[ctx->item_size * i], & ctx->mem[ctx->item_size * (ctx->len - 1)], ctx->item_size); // NOTE: this can also be expensive, altho not as much as the memcmp of all elements up above
+                ctx->mem[i] = ctx->mem[ctx->len - 1];
             }
             ctx->len -= 1;
-            printf("buf_remove: removed item at index %ld\n", i);
+            printf("buf_remove: removed item %d\n", item);
             unlock(& ctx->lock);
             return;
         }
@@ -98,17 +87,17 @@ void buf_remove(struct buf * ctx, void * item)
     fprintf(stderr, "ERROR: could not find item in buffer\n");
 }
 
-void buf_iter_begin(struct buf * ctx)
+void buf_iter_start(struct buf * ctx)
 {
     lock(& ctx->lock);
 }
 
-void buf_iter_end(struct buf * ctx)
+void buf_iter_stop(struct buf * ctx)
 {
     unlock(& ctx->lock);
 }
 
-void * buf_get(struct buf * ctx, size_t idx)
+BUF_ITEM_TYPE buf_get(struct buf * ctx, size_t idx)
 {
-    return & ctx->mem[ctx->item_size * idx];
+    return ctx->mem[idx];
 }

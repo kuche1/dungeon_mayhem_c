@@ -18,7 +18,7 @@ int main(void)
     int shutting_down = 0;
 
     struct buf clients;
-    buf_init(& clients);
+    buf_init(& clients, sizeof(int));
 
     pthread_t cht_thr;
     if(client_handler_thread_spawn(& cht_thr, & shutting_down, & clients)){
@@ -36,7 +36,11 @@ int main(void)
 
         printf("main: client pick up (%d)\n", cli_sock);
 
-        buf_append(& clients, cli_sock);
+        {
+            int * ptr = buf_append_begin(& clients);
+            * ptr = cli_sock;
+            buf_append_end(& clients);
+        }
 
         printf("main: buf len %ld\n", clients.len);
     }
