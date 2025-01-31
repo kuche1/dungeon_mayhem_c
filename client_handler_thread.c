@@ -52,28 +52,30 @@ static void * client_handler_thread(void * voidp_args)
     {
         buf_clean(& polls);
 
-        buf_iter_begin(args->clients);
+        size_t polls_len = 0;
 
-        if(args->clients->len <= 0){
-            printf("client_handler_thread: no clients, sleeping\n");
-            buf_iter_end(args->clients);
-            sleep(1);
-            continue;
-        }
-
-        size_t polls_len = args->clients->len;
-
-        for(size_t i=0; i<polls_len; ++i)
         {
-            struct pollfd * pol = buf_append_begin(& polls);
+            buf_lock(args->clients);
 
-            pol->fd = * (int *) buf_get(args->clients, i); // it IS valid to set fd to <0 (its just going to get ignored)
-            pol->events = POLLIN;
+            if(args->clients->len <= 0){
+                printf("client_handler_thread: no clients, sleeping\n");
+                buf_unlock(args->clients);
+                sleep(1);
+                continue;
+            }
 
-            buf_append_end(& polls);
+            polls_len = args->clients->len;
+
+            for(size_t i=0; i<polls_len; ++i)
+            {
+                struct pollfd * pol = buf_append(& polls);
+
+                pol->fd = * (int *) buf_get(args->clients, i); // it IS valid to set fd to <0 (its just going to get ignored)
+                pol->events = POLLIN;
+            }
+
+            buf_unlock(args->clients);
         }
-
-        buf_iter_end(args->clients);
 
         printf("client_handler_thread: waiting for event\n");
 
@@ -99,7 +101,11 @@ static void * client_handler_thread(void * voidp_args)
 
                 printf("client_handler_thread: event on fd %d\n", fd);
 
-                buf_remove(args->clients, & fd);
+                {
+                    buf_lock(args->clients);
+                    buf_remove(args->clients, & fd);
+                    buf_unlock(args->clients);
+                }
 
                 net_client_hangup(fd);
 

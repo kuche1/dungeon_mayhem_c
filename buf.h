@@ -18,16 +18,15 @@ struct buf
 void buf_init(struct buf * ctx, size_t item_size);
 void buf_deinit(struct buf * ctx);
 
-void * buf_append_begin(struct buf * ctx);
-void buf_append_end(struct buf * ctx);
+void buf_lock(struct buf * ctx);
+void buf_unlock(struct buf * ctx);
 
-void buf_remove(struct buf * ctx, void * item);
-void buf_clean(struct buf * ctx);
+void * buf_append(struct buf * ctx); // needs to be used with in a locked buffer in multithreaded environment
 
-void buf_iter_begin(struct buf * ctx);
-void buf_iter_end(struct buf * ctx);
+void buf_remove(struct buf * ctx, void * item); // needs to be used with in a locked buffer in multithreaded environment
+void buf_clean(struct buf * ctx); // needs to be used with in a locked buffer in multithreaded environment
 
-void * buf_get(struct buf * ctx, size_t idx);
-void * buf_get_all(struct buf * ctx);
+void * buf_get(struct buf * ctx, size_t idx); // result needs to be used with in a locked buffer in multithreaded environment
+void * buf_get_all(struct buf * ctx); // result needs to be used with in a locked buffer in multithreaded environment
 
 #endif

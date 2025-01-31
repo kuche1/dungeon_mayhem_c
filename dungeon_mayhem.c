@@ -37,9 +37,12 @@ int main(void)
         printf("main: client pick up (%d)\n", cli_sock);
 
         {
-            int * ptr = buf_append_begin(& clients);
+            buf_lock(& clients);
+
+            int * ptr = buf_append(& clients);
             * ptr = cli_sock;
-            buf_append_end(& clients);
+
+            buf_unlock(& clients);
         }
 
         printf("main: buf len %ld\n", clients.len);
