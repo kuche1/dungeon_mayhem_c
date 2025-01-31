@@ -1,4 +1,7 @@
 
+// TODO
+// maybe we should just let the end user do the locking and unlocking himself for all fncs
+
 #include "buf.h"
 
 #include <stdlib.h>
@@ -98,6 +101,15 @@ void buf_remove(struct buf * ctx, void * item)
     fprintf(stderr, "ERROR: could not find item in buffer\n");
 }
 
+void buf_clean(struct buf * ctx)
+{
+    lock(& ctx->lock);
+
+    ctx->len = 0;
+
+    unlock(& ctx->lock);
+}
+
 void buf_iter_begin(struct buf * ctx)
 {
     lock(& ctx->lock);
@@ -108,7 +120,14 @@ void buf_iter_end(struct buf * ctx)
     unlock(& ctx->lock);
 }
 
+// needs to be used in a buf_iter context for multithreaded safety
 void * buf_get(struct buf * ctx, size_t idx)
 {
     return & ctx->mem[ctx->item_size * idx];
+}
+
+// needs to be used in a buf_iter context for multithreaded safety
+void * buf_get_all(struct buf * ctx)
+{
+    return ctx->mem;
 }

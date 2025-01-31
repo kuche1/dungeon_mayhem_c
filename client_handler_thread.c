@@ -44,8 +44,14 @@ static void * client_handler_thread(void * voidp_args)
 {
     struct cht_args * args = voidp_args;
 
+    struct buf polls;
+    buf_init(& polls, sizeof(struct pollfd));
+    // TODO we need to add another "virtual" fd that triggeres whenever an item is added to the buffer
+
     while(!*args->shutting_down)
     {
+        buf_clean(& polls);
+
         buf_iter_begin(args->clients);
 
         if(args->clients->len <= 0){
@@ -56,19 +62,22 @@ static void * client_handler_thread(void * voidp_args)
         }
 
         size_t polls_len = args->clients->len;
-        struct pollfd polls[polls_len]; // TODO not very smart allocating unknown size on the stack // TODO we also need to add another "virtual" fd that triggeres whenever an item is added to the buffer
 
         for(size_t i=0; i<polls_len; ++i)
         {
-            polls[i].fd = * (int *) buf_get(args->clients, i); // it IS valid to set fd to <0 (its just going to get ignored)
-            polls[i].events = POLLIN;
+            struct pollfd * pol = buf_append_begin(& polls);
+
+            pol->fd = * (int *) buf_get(args->clients, i); // it IS valid to set fd to <0 (its just going to get ignored)
+            pol->events = POLLIN;
+
+            buf_append_end(& polls);
         }
 
         buf_iter_end(args->clients);
 
         printf("client_handler_thread: waiting for event\n");
 
-        int num_fds = poll(polls, polls_len, CHT_POLL_TIMEOUT_MS);
+        int num_fds = poll(buf_get_all(& polls), polls_len, CHT_POLL_TIMEOUT_MS);
 
         if(num_fds == 0){
             // timeout
@@ -83,8 +92,10 @@ static void * client_handler_thread(void * voidp_args)
         printf("client_handler_thread: num_fds %d\n", num_fds);
 
         for(size_t fd_idx=0; (fd_idx<polls_len) && (num_fds > 0); ++fd_idx){
-            if(polls[fd_idx].revents){
-                int fd = polls[fd_idx].fd;
+            struct pollfd * pol = buf_get(& polls, fd_idx);
+
+            if(pol->revents){
+                int fd = pol->fd;
 
                 printf("client_handler_thread: event on fd %d\n", fd);
 

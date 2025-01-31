@@ -20,10 +20,14 @@ void buf_deinit(struct buf * ctx);
 
 void * buf_append_begin(struct buf * ctx);
 void buf_append_end(struct buf * ctx);
+
 void buf_remove(struct buf * ctx, void * item);
+void buf_clean(struct buf * ctx);
 
 void buf_iter_begin(struct buf * ctx);
 void buf_iter_end(struct buf * ctx);
+
 void * buf_get(struct buf * ctx, size_t idx);
+void * buf_get_all(struct buf * ctx);
 
 #endif
