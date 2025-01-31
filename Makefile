@@ -46,6 +46,6 @@ $(EXECUTABLE): $(OBJECT_FILES)
 %.o: %.c %.d
 	$(CC) $(DEPFLAGS) $(CCFLAGS) -c $<
 
-$(DEPENDENCY_FILES): # mention each dependenci as target so that make doesnt cry it it doesnt find them (is this really needed?)
+$(DEPENDENCY_FILES): # mention each dependenci as target so that make doesnt cry if it doesnt find them (is this really needed?)
 
 include $(wildcard $(DEPENDENCY_FILES))
