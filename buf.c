@@ -69,17 +69,15 @@ void buf_remove(struct buf * ctx, BUF_ITEM_TYPE item)
 {
     lock(& ctx->lock);
 
-    if(ctx->len == 1){
-        ctx->len = 0;
-        unlock(& ctx->lock);
-        return;
-    }
-
     for(size_t i=0; i<ctx->len; ++i)
     {
         if(ctx->mem[i] == item){
-            ctx->mem[i] = ctx->mem[ctx->len - 1];
+            if((ctx->len >= 2) && (i != ctx->len - 1)){
+                ctx->mem[i] = ctx->mem[ctx->len - 1];
+            }
             ctx->len -= 1;
+            printf("buf_remove: removed item %d\n", item);
+            unlock(& ctx->lock);
             return;
         }
     }
@@ -87,4 +85,19 @@ void buf_remove(struct buf * ctx, BUF_ITEM_TYPE item)
     unlock(& ctx->lock);
 
     fprintf(stderr, "ERROR: could not find item in buffer\n");
+}
+
+void buf_iter_start(struct buf * ctx)
+{
+    lock(& ctx->lock);
+}
+
+void buf_iter_stop(struct buf * ctx)
+{
+    unlock(& ctx->lock);
+}
+
+BUF_ITEM_TYPE buf_get(struct buf * ctx, size_t idx)
+{
+    return ctx->mem[idx];
 }

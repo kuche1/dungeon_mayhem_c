@@ -8,7 +8,7 @@
 
 #define NCP_POLL_TIMEOUT_MS 1000
 
-[[nodiscard]] int net_init(struct net * ctx, uint16_t port, int listen_queue)
+int net_init(struct net * ctx, uint16_t port, int listen_queue)
 {
     ctx->sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if(ctx->sock < 0){
@@ -53,7 +53,7 @@ void net_deinit(struct net * ctx)
     }
 }
 
-[[nodiscard]] int net_client_pickup(struct net * ctx, int * sock)
+int net_client_pickup(struct net * ctx, int * sock)
 {
     struct pollfd sock_poll = {
         .fd = ctx->sock,

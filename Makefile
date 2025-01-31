@@ -18,4 +18,4 @@ clean:
 	rm -f $(EXECUTABLE)
 
 $(EXECUTABLE): Makefile $(FILES_C) $(FILES_H)
-	$(CC) $(CFLGAS) -o $(EXECUTABLE) $(FILES_C) $(FILES_H)
+	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(FILES_C) $(FILES_H)

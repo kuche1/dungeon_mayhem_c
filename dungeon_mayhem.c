@@ -1,4 +1,5 @@
 
+#include "client_handler_thread.h"
 #include "net.h"
 #include "buf.h"
 
@@ -19,6 +20,13 @@ int main(void)
     struct buf clients;
     buf_init(& clients);
 
+    pthread_t cht_thr;
+    if(client_handler_thread_spawn(& cht_thr, & shutting_down, & clients)){
+        buf_deinit(& clients);
+        net_deinit(& net);
+        return 1;
+    }
+
     while(!shutting_down)
     {
         int cli_sock;
@@ -26,18 +34,16 @@ int main(void)
             continue;
         }
 
-        printf("client pick up (%d)\n", cli_sock);
+        printf("main: client pick up (%d)\n", cli_sock);
 
         buf_append(& clients, cli_sock);
 
-        printf("buf len %ld\n", clients.len);
-
-        buf_remove(& clients, cli_sock);
-
-        net_client_hangup(cli_sock);
-
-        printf("client hang up (%d)\n", cli_sock);
+        printf("main: buf len %ld\n", clients.len);
     }
+
+    client_handler_thread_join(& cht_thr);
+
+    buf_deinit(& clients);
 
     net_deinit(& net);
 
