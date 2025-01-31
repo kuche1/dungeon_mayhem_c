@@ -56,7 +56,7 @@ static void * client_handler_thread(void * voidp_args)
         }
 
         size_t polls_len = args->clients->len;
-        struct pollfd polls[polls_len]; // TODO not very smart allocating unknown size on the stack
+        struct pollfd polls[polls_len]; // TODO not very smart allocating unknown size on the stack // TODO we also need to add another "virtual" fd that triggeres whenever an item is added to the buffer
 
         for(size_t i=0; i<polls_len; ++i)
         {
