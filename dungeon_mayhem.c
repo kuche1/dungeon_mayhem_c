@@ -16,12 +16,13 @@
 
 int main(void)
 {
+    struct global_context g_ctx;
+    g_ctx.shutting_down = 0;
+
     struct net net;
     if(net_init(& net, PORT, LISTEN_QUEUE)){
         return 1;
     }
-
-    int shutting_down = 0;
 
     struct buf clients;
     buf_init(& clients, sizeof(struct client));
@@ -35,14 +36,14 @@ int main(void)
     }
 
     pthread_t cht_thr;
-    if(client_handler_thread_spawn(& cht_thr, & shutting_down, & clients, clients_update_eventfd)){
+    if(client_handler_thread_spawn(& cht_thr, & g_ctx.shutting_down, & clients, clients_update_eventfd)){
         close(clients_update_eventfd);
         buf_deinit(& clients);
         net_deinit(& net);
         return 1;
     }
 
-    accept_connections_loop(& shutting_down, & net, & clients, clients_update_eventfd);
+    accept_connections_loop(& g_ctx.shutting_down, & net, & clients, clients_update_eventfd);
 
     client_handler_thread_join(cht_thr);
 
