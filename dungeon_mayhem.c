@@ -34,7 +34,7 @@ int main(void)
     }
 
     pthread_t cht_thr;
-    if(client_handler_thread_spawn(& g_ctx, & cht_thr, & g_ctx.clients, clients_update_eventfd)){
+    if(client_handler_thread_spawn(& g_ctx, & cht_thr, clients_update_eventfd)){
         close(clients_update_eventfd);
         buf_deinit(& g_ctx.clients);
         net_deinit(& g_ctx.net);

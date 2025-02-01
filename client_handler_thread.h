@@ -6,7 +6,7 @@
 
 #include <pthread.h>
 
-int client_handler_thread_spawn(struct global_context * g_ctx, pthread_t * thr, struct buf * clients, int clients_update_eventfd);
+int client_handler_thread_spawn(struct global_context * g_ctx, pthread_t * thr, int clients_update_eventfd);
 void client_handler_thread_join(pthread_t thr);
 
 #endif
