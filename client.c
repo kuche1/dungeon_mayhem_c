@@ -53,5 +53,9 @@ void client_serve(int sock, struct buf * clients)
         return;
     }
 
+    char msg[20] = {0};
+    recv(sock, msg, sizeof(msg) - 1, 0); // TODO error check i kurvi
+    printf("client_serve: from %d: `%s`\n", sock, msg);
+
     client_deinit(client, clients);
 }
