@@ -25,27 +25,26 @@ int main(void)
 
     buf_init(& g_ctx.clients, sizeof(struct client));
 
-    int clients_update_eventfd = eventfd(0, EFD_NONBLOCK);
-    if(clients_update_eventfd < 0){
+    g_ctx.clients_update_eventfd = eventfd(0, EFD_NONBLOCK);
+    if(g_ctx.clients_update_eventfd < 0){
         perror("ERROR: eventfd");
         buf_deinit(& g_ctx.clients);
         net_deinit(& g_ctx.net);
         return 1;
     }
 
-    pthread_t cht_thr;
-    if(client_handler_thread_spawn(& g_ctx, & cht_thr, clients_update_eventfd)){
-        close(clients_update_eventfd);
+    if(client_handler_thread_spawn(& g_ctx, & g_ctx.cht_thr, g_ctx.clients_update_eventfd)){
+        close(g_ctx.clients_update_eventfd);
         buf_deinit(& g_ctx.clients);
         net_deinit(& g_ctx.net);
         return 1;
     }
 
-    accept_connections_loop(& g_ctx.shutting_down, & g_ctx.net, & g_ctx.clients, clients_update_eventfd);
+    accept_connections_loop(& g_ctx.shutting_down, & g_ctx.net, & g_ctx.clients, g_ctx.clients_update_eventfd);
 
-    client_handler_thread_join(cht_thr);
+    client_handler_thread_join(g_ctx.cht_thr);
 
-    close(clients_update_eventfd);
+    close(g_ctx.clients_update_eventfd);
 
     // TODO close all client connections?
     buf_deinit(& g_ctx.clients);
