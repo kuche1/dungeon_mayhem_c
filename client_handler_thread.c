@@ -20,7 +20,7 @@ struct cht_args
 
 static void * client_handler_thread(void * voidp_args);
 
-int client_handler_thread_spawn(struct global_context * g_ctx, pthread_t * thr, int clients_update_eventfd)
+int client_handler_thread_spawn(struct global_context * g_ctx)
 {
     struct cht_args * args = malloc(sizeof(* args));
     if(!args){
@@ -30,9 +30,9 @@ int client_handler_thread_spawn(struct global_context * g_ctx, pthread_t * thr, 
 
     args->shutting_down = & g_ctx->shutting_down;
     args->clients = & g_ctx->clients;
-    args->clients_update_eventfd = clients_update_eventfd;
+    args->clients_update_eventfd = g_ctx->clients_update_eventfd;
 
-    if(pthread_create(thr, NULL, client_handler_thread, args)){
+    if(pthread_create(& g_ctx->cht_thr, NULL, client_handler_thread, args)){
         fprintf(stderr, "ERROR: could not spawn thread\n");
         free(args);
         return 1;

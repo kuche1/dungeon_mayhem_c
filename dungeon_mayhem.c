@@ -33,7 +33,7 @@ int main(void)
         return 1;
     }
 
-    if(client_handler_thread_spawn(& g_ctx, & g_ctx.cht_thr, g_ctx.clients_update_eventfd)){
+    if(client_handler_thread_spawn(& g_ctx)){
         close(g_ctx.clients_update_eventfd);
         buf_deinit(& g_ctx.clients);
         net_deinit(& g_ctx.net);
