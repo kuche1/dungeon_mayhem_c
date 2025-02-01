@@ -1,4 +1,7 @@
 
+#include "dungeon_mayhem.h"
+
+#include "accept_connections_loop.h"
 #include "client_handler_thread.h"
 #include "net.h"
 #include "buf.h"
@@ -38,40 +41,7 @@ int main(void)
         return 1;
     }
 
-    while(!shutting_down)
-    {
-        int cli_sock;
-        if(net_client_pickup(& net, & cli_sock)){
-            continue;
-        }
-
-        printf("main: client pick up (%d)\n", cli_sock);
-
-        {
-            buf_lock(& clients);
-
-            int * ptr = buf_append(& clients);
-            * ptr = cli_sock;
-
-            buf_unlock(& clients);
-        }
-
-        {
-            ssize_t ret = write(clients_update_eventfd, &(uint64_t){1}, sizeof(uint64_t));
-            if(ret < 0){
-                perror("ERROR: write to eventfd failed");
-                // TODO? clean up
-                return 1;
-            }
-            if(ret != sizeof(uint64_t)){
-                fprintf(stderr, "ERROR: could not write full data to eventfd\n");
-                // TODO? clean up
-                return 1;
-            }
-        }
-
-        printf("main: buf len %ld\n", clients.len);
-    }
+    accept_connections_loop(& shutting_down, & net, & clients, clients_update_eventfd);
 
     client_handler_thread_join(cht_thr);
 
