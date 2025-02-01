@@ -62,7 +62,7 @@ int net_client_pickup(struct net * ctx, int * sock)
     };
 
     {
-        int ret = poll(& sock_poll, 1, NCP_POLL_TIMEOUT_MS);
+        int ret = poll(& sock_poll, 1, NCP_POLL_TIMEOUT_MS); // TODO use the same mechanism as with the other poll
 
         if(ret == 0){
             // timeout
