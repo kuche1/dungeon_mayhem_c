@@ -28,11 +28,11 @@ void accept_connections_loop(int * shutting_down, struct net * net, struct buf *
         {
             ssize_t ret = write(clients_update_eventfd, &(uint64_t){1}, sizeof(uint64_t));
             if(ret < 0){
-                perror("ERROR: write to eventfd failed");
+                perror("ERROR: accept_connections_loop: write to eventfd failed");
                 exit(1);
             }
             if(ret != sizeof(uint64_t)){
-                fprintf(stderr, "ERROR: could not write full data to eventfd\n");
+                fprintf(stderr, "ERROR: accept_connections_loop: could not write full data to eventfd\n");
                 exit(1);
             }
         }
