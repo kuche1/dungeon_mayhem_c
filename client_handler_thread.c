@@ -20,7 +20,7 @@ struct cht_args
 
 static void * client_handler_thread(void * voidp_args);
 
-int client_handler_thread_spawn(pthread_t * thr, int * shutting_down, struct buf * clients, int clients_update_eventfd)
+int client_handler_thread_spawn(struct global_context * g_ctx, pthread_t * thr, struct buf * clients, int clients_update_eventfd)
 {
     struct cht_args * args = malloc(sizeof(* args));
     if(!args){
@@ -28,7 +28,7 @@ int client_handler_thread_spawn(pthread_t * thr, int * shutting_down, struct buf
         return 1;
     }
 
-    args->shutting_down = shutting_down;
+    args->shutting_down = & g_ctx->shutting_down;
     args->clients = clients;
     args->clients_update_eventfd = clients_update_eventfd;
 
