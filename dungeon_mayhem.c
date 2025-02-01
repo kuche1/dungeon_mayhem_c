@@ -3,6 +3,7 @@
 
 #include "accept_connections_loop.h"
 #include "client_handler_thread.h"
+#include "client.h"
 #include "net.h"
 #include "buf.h"
 
@@ -23,7 +24,7 @@ int main(void)
     int shutting_down = 0;
 
     struct buf clients;
-    buf_init(& clients, sizeof(int));
+    buf_init(& clients, sizeof(struct client));
 
     int clients_update_eventfd = eventfd(0, EFD_NONBLOCK);
     if(clients_update_eventfd < 0){

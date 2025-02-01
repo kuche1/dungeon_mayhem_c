@@ -1,6 +1,8 @@
 
 #include "accept_connections_loop.h"
 
+#include "client.h"
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,21 +11,14 @@ void accept_connections_loop(int * shutting_down, struct net * net, struct buf *
 {
     while(!*shutting_down)
     {
-        int cli_sock;
-        if(net_client_pickup(net, & cli_sock)){
+        int sock;
+        if(net_client_pickup(net, & sock)){
             continue;
         }
 
-        printf("accept_connections_loop: client pick up (%d)\n", cli_sock);
+        printf("accept_connections_loop: client pick up (%d)\n", sock);
 
-        {
-            buf_lock(clients);
-
-            int * ptr = buf_append(clients);
-            * ptr = cli_sock;
-
-            buf_unlock(clients);
-        }
+        client_init(sock, clients);
 
         {
             ssize_t ret = write(clients_update_eventfd, &(uint64_t){1}, sizeof(uint64_t));

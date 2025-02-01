@@ -1,7 +1,7 @@
 
 #include "client_handler_thread.h"
 
-#include "client_serve.h"
+#include "client.h"
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -75,9 +75,11 @@ static void * client_handler_thread(void * voidp_args)
 
             for(size_t cli_idx=0; cli_idx<args->clients->len; ++cli_idx)
             {
+                struct client * client = buf_get(args->clients, cli_idx);
+
                 struct pollfd * pol = buf_append(& polls);
 
-                pol->fd = * (int *) buf_get(args->clients, cli_idx); // it IS valid to set fd to <0 (its just going to get ignored)
+                pol->fd = client->sock; // it IS valid to set fd to <0 (its just going to get ignored)
                 pol->events = POLLIN;
             }
 
