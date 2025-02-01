@@ -11,30 +11,12 @@
 
 #define CHT_POLL_TIMEOUT_MS -1 // negative for infinite timeout
 
-struct cht_args
-{
-    int * shutting_down;
-    struct buf * clients;
-    int clients_update_eventfd;
-};
-
 static void * client_handler_thread(void * voidp_args);
 
 int client_handler_thread_spawn(struct global_context * g_ctx)
 {
-    struct cht_args * args = malloc(sizeof(* args));
-    if(!args){
-        fprintf(stderr, "ERROR: could not allocate memory for thread arguments\n");
-        return 1;
-    }
-
-    args->shutting_down = & g_ctx->shutting_down;
-    args->clients = & g_ctx->clients;
-    args->clients_update_eventfd = g_ctx->clients_update_eventfd;
-
-    if(pthread_create(& g_ctx->cht_thr, NULL, client_handler_thread, args)){
+    if(pthread_create(& g_ctx->cht_thr, NULL, client_handler_thread, g_ctx)){
         fprintf(stderr, "ERROR: could not spawn thread\n");
-        free(args);
         return 1;
     }
 
@@ -50,7 +32,7 @@ void client_handler_thread_join(pthread_t thr)
 
 static void * client_handler_thread(void * voidp_args)
 {
-    struct cht_args * args = voidp_args;
+    struct global_context * g_ctx = voidp_args;
 
     struct buf polls;
     buf_init(& polls, sizeof(struct pollfd));
@@ -62,20 +44,20 @@ static void * client_handler_thread(void * voidp_args)
         // that means that when the update signal is sent we can
         // catch it right away and break out of the loop
         struct pollfd * pol_update = buf_append(& polls);
-        pol_update->fd = args->clients_update_eventfd;
+        pol_update->fd = g_ctx->clients_update_eventfd;
         pol_update->events = POLLIN;
     }
 
-    while(!*args->shutting_down)
+    while(!g_ctx->shutting_down)
     {
         buf_clear(& polls, BUF_START_IDX);
 
         {
-            buf_lock(args->clients);
+            buf_lock(& g_ctx->clients);
 
-            for(size_t cli_idx=0; cli_idx<args->clients->len; ++cli_idx)
+            for(size_t cli_idx=0; cli_idx<g_ctx->clients.len; ++cli_idx)
             {
-                struct client * client = buf_get(args->clients, cli_idx);
+                struct client * client = buf_get(& g_ctx->clients, cli_idx);
 
                 struct pollfd * pol = buf_append(& polls);
 
@@ -83,7 +65,7 @@ static void * client_handler_thread(void * voidp_args)
                 pol->events = POLLIN;
             }
 
-            buf_unlock(args->clients);
+            buf_unlock(& g_ctx->clients);
         }
 
         printf("client_handler_thread: waiting for event\n");
@@ -109,9 +91,9 @@ static void * client_handler_thread(void * voidp_args)
 
                 int fd = pol->fd;
 
-                if(fd == args->clients_update_eventfd){
+                if(fd == g_ctx->clients_update_eventfd){
 
-                    printf("client_handler_thread: event on update fd (%d)\n", args->clients_update_eventfd);
+                    printf("client_handler_thread: event on update fd (%d)\n", g_ctx->clients_update_eventfd);
 
                     {
                         uint64_t tmp;
@@ -128,7 +110,7 @@ static void * client_handler_thread(void * voidp_args)
 
                     printf("client_handler_thread: event on fd %d\n", fd);
 
-                    client_serve(fd, args->clients);
+                    client_serve(fd, & g_ctx->clients);
 
                 }
 
@@ -137,8 +119,6 @@ static void * client_handler_thread(void * voidp_args)
             }
         }
     }
-
-    free(args);
 
     printf("client_handler_thread: done\n");
 
