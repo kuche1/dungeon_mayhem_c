@@ -77,6 +77,7 @@ int main(void)
 
     close(clients_update_eventfd);
 
+    // TODO close all client connections?
     buf_deinit(& clients);
 
     net_deinit(& net);

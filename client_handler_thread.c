@@ -1,10 +1,11 @@
 
 #include "client_handler_thread.h"
 
-#include "net.h"
+#include "client_serve.h"
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <poll.h>
 
@@ -125,17 +126,12 @@ static void * client_handler_thread(void * voidp_args)
 
                     printf("client_handler_thread: event on fd %d\n", fd);
 
-                    {
-                        buf_lock(args->clients);
-                        buf_remove(args->clients, & fd);
-                        buf_unlock(args->clients);
-                    }
-
-                    net_client_hangup(fd);
+                    client_serve(fd, args->clients);
 
                 }
 
                 // num_fds -= 1;
+                // TODO uncomment when sure that everything here works
             }
         }
     }
