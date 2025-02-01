@@ -19,8 +19,7 @@ int main(void)
     struct global_context g_ctx;
     g_ctx.shutting_down = 0;
 
-    struct net net;
-    if(net_init(& net, PORT, LISTEN_QUEUE)){
+    if(net_init(& g_ctx.net, PORT, LISTEN_QUEUE)){
         return 1;
     }
 
@@ -30,7 +29,7 @@ int main(void)
     if(clients_update_eventfd < 0){
         perror("ERROR: eventfd");
         buf_deinit(& g_ctx.clients);
-        net_deinit(& net);
+        net_deinit(& g_ctx.net);
         return 1;
     }
 
@@ -38,11 +37,11 @@ int main(void)
     if(client_handler_thread_spawn(& g_ctx, & cht_thr, & g_ctx.clients, clients_update_eventfd)){
         close(clients_update_eventfd);
         buf_deinit(& g_ctx.clients);
-        net_deinit(& net);
+        net_deinit(& g_ctx.net);
         return 1;
     }
 
-    accept_connections_loop(& g_ctx.shutting_down, & net, & g_ctx.clients, clients_update_eventfd);
+    accept_connections_loop(& g_ctx.shutting_down, & g_ctx.net, & g_ctx.clients, clients_update_eventfd);
 
     client_handler_thread_join(cht_thr);
 
@@ -51,7 +50,7 @@ int main(void)
     // TODO close all client connections?
     buf_deinit(& g_ctx.clients);
 
-    net_deinit(& net);
+    net_deinit(& g_ctx.net);
 
     return 0;
 }
