@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <errno.h>
 #include <poll.h>
 
 #define NCP_POLL_TIMEOUT_MS 1000
@@ -12,12 +13,12 @@ int net_init(struct net * ctx, uint16_t port, int listen_queue)
 {
     ctx->sock = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if(ctx->sock < 0){
-        perror("could not create socket");
+        perror("ERROR: could not create socket");
         return 1;
     }
 
     if(setsockopt(ctx->sock, SOL_SOCKET, SO_REUSEADDR, &(int){1}, sizeof(int)) < 0){
-        perror("could not make socket reusable");
+        perror("ERROR: could not make socket reusable");
         net_deinit(ctx);
         return 1;
     }
@@ -29,13 +30,13 @@ int net_init(struct net * ctx, uint16_t port, int listen_queue)
     ctx->addr.sin_port = htons(port);
 
     if(bind(ctx->sock, (struct sockaddr *) & ctx->addr, sizeof(ctx->addr))){
-        perror("could not bind socket");
+        perror("ERROR: could not bind socket");
         net_deinit(ctx);
         return 1;
     }
 
     if(listen(ctx->sock, listen_queue)){ 
-        perror("could not listen on socket");
+        perror("ERROR: could not listen on socket");
         return 1;
     }
 
@@ -45,11 +46,11 @@ int net_init(struct net * ctx, uint16_t port, int listen_queue)
 void net_deinit(struct net * ctx)
 {
     if(shutdown(ctx->sock, SHUT_RDWR)){
-        perror("could not shut down socket");
+        perror("ERROR: could not shut down socket");
     }
 
     if(close(ctx->sock)){
-        perror("could not close socket");
+        perror("ERROR: could not close socket");
     }
 }
 
@@ -70,7 +71,7 @@ int net_client_pickup(struct net * ctx, int * sock)
             // event
         }else if(ret < 0){
             // error
-            perror("poll");
+            perror("ERROR: poll");
             return 1;
         }else{
             // unreachable
@@ -81,7 +82,7 @@ int net_client_pickup(struct net * ctx, int * sock)
 
     * sock = accept(ctx->sock, NULL, NULL);
     if(* sock < 0){
-        perror("could not accept client");
+        perror("ERROR: could not accept client");
         return 1;
     }
 
@@ -91,10 +92,10 @@ int net_client_pickup(struct net * ctx, int * sock)
 void net_client_hangup(int sock)
 {
     if(shutdown(sock, SHUT_RDWR)){
-        perror("could not shut down client socket");
+        fprintf(stderr, "ERROR: could not shut down client socket %d: %s\n", sock, strerror(errno));
     }
 
     if(close(sock)){
-        perror("could not close client socket");
+        fprintf(stderr, "ERROR: could not close client socket %d: %s\n", sock, strerror(errno));
     }
 }

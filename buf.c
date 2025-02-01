@@ -86,9 +86,14 @@ void buf_remove(struct buf * ctx, void * item)
     fprintf(stderr, "ERROR: could not find item in buffer\n");
 }
 
-void buf_clean(struct buf * ctx)
+void buf_clear(struct buf * ctx, size_t items_to_keep)
 {
-    ctx->len = 0;
+    if(items_to_keep > ctx->len){
+        fprintf(stderr, "ERROR: trying to clear everything but %ld elements in a buf of %ld elements\n", items_to_keep, ctx->len);
+        return;
+    }
+
+    ctx->len = items_to_keep;
 }
 
 void * buf_get(struct buf * ctx, size_t idx)
