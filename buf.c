@@ -1,7 +1,4 @@
 
-// TODO
-// maybe we should just let the end user do the locking and unlocking himself for all fncs
-
 #include "buf.h"
 
 #include <stdlib.h>
