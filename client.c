@@ -16,7 +16,8 @@ void client_init(int sock, struct buf * clients)
     buf_unlock(clients);
 }
 
-void client_deinit(struct client * client, struct buf * clients)
+// this doesnt need to be static (yet)
+static void client_deinit(struct client * client, struct buf * clients)
 {
     buf_lock(clients);
     net_client_hangup(client->sock);
@@ -26,6 +27,13 @@ void client_deinit(struct client * client, struct buf * clients)
     // za da izbegna tezi laina s postoqnnoto lock-vane kogato mi trqbva da napravq neshto elementarno
     // trqbva da napravq dummy pointer taka che kogato neshto se realloc-va to da si razmenq kude stoi
     // pointer-a v pametta, no ako veche sum stignal do tozi pointer moga da pravq kakvoto si iskam s nego
+}
+
+int client_sameas_interface(void * client_a, void * client_b, __attribute__ ((unused)) size_t item_size)
+{
+    struct client * cli_a = client_a;
+    struct client * cli_b = client_b;
+    return cli_a->sock == cli_b->sock;
 }
 
 void client_serve(int sock, struct buf * clients)

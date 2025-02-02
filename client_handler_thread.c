@@ -30,12 +30,19 @@ void client_handler_thread_join(pthread_t thr)
     }
 }
 
+static int poll_sameas_interface(void * poll_a, void * poll_b, __attribute__ ((unused)) size_t item_size)
+{
+    struct pollfd * pa = poll_a;
+    struct pollfd * pb = poll_b;
+    return pa->fd == pb->fd;
+}
+
 static void * client_handler_thread(void * voidp_args)
 {
     struct global_context * g_ctx = voidp_args;
 
     struct buf polls;
-    buf_init(& polls, sizeof(struct pollfd));
+    buf_init(& polls, sizeof(struct pollfd), poll_sameas_interface);
 
     const size_t BUF_START_IDX = 1;
 

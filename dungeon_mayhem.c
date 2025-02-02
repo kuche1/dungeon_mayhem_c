@@ -23,7 +23,7 @@ int main(void)
         return 1;
     }
 
-    buf_init(& g_ctx.clients, sizeof(struct client));
+    buf_init(& g_ctx.clients, sizeof(struct client), client_sameas_interface);
 
     g_ctx.clients_update_eventfd = eventfd(0, EFD_NONBLOCK);
     if(g_ctx.clients_update_eventfd < 0){
