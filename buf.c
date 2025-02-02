@@ -86,16 +86,27 @@ void buf_remove(struct buf * ctx, void * item)
     for(size_t i=0; i<ctx->len; ++i)
     {
         if(ctx->sameas_fnc(& ctx->mem[ctx->item_size * i], item, ctx->item_size)){
-            if((ctx->len >= 2) && (i != ctx->len - 1)){
-                memcpy(& ctx->mem[ctx->item_size * i], & ctx->mem[ctx->item_size * (ctx->len - 1)], ctx->item_size); // TODO: this will copy the whole item, perhaps we should use a `copy_fnc`
-            }
-            ctx->len -= 1;
-            printf("buf_remove: removed item at index %ld\n", i);
+            buf_removeat(ctx, i);
             return;
         }
     }
 
-    fprintf(stderr, "ERROR: could not find item in buffer\n");
+    fprintf(stderr, "ERROR: buf_remove: could not find item in buffer\n");
+}
+
+void buf_removeat(struct buf * ctx, size_t idx)
+{
+    if(/* idx < 0 || */ idx >= ctx->len){
+        fprintf(stderr, "ERROR: buf_removeat: invalid index (idx=%ld len=%ld)\n", idx, ctx->len);
+        return;
+    }
+
+    if((ctx->len >= 2) && (idx != ctx->len - 1)){
+        memcpy(& ctx->mem[ctx->item_size * idx], & ctx->mem[ctx->item_size * (ctx->len - 1)], ctx->item_size); // TODO: this will copy the whole item, perhaps we should use a `copy_fnc`
+    }
+
+    ctx->len -= 1;
+    printf("buf_removeat: removed item at index %ld\n", idx);
 }
 
 void buf_clear(struct buf * ctx, size_t items_to_keep)

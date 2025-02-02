@@ -33,7 +33,10 @@ void * buf_append(struct buf * ctx); // needs to be used with in a locked buffer
 
 void buf_remove(struct buf * ctx, void * item);
 // needs to be used with in a locked buffer in multithreaded environment
-// internally `sameas_fnc` to compare the items
+// internally uses `sameas_fnc` to compare the items
+
+void buf_removeat(struct buf * ctx, size_t idx);
+// needs to be used with in a locked buffer in multithreaded environment
 
 void buf_clear(struct buf * ctx, size_t items_to_keep); // needs to be used with in a locked buffer in multithreaded environment
 

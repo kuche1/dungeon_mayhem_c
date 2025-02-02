@@ -5,13 +5,13 @@
 
 #include <stdio.h>
 
-void client_init(int sock, struct buf * clients)
+void client_init(int sock, struct buf * clients, struct client * * client)
 {
     buf_lock(clients);
 
-    struct client * client = buf_append(clients);
-
-    client->sock = sock;
+    struct client * cli = buf_append(clients);
+    cli->sock = sock;
+    * client = cli;
 
     buf_unlock(clients);
 }
@@ -36,8 +36,10 @@ int client_sameas_interface(void * client_a, void * client_b, __attribute__ ((un
     return cli_a->sock == cli_b->sock;
 }
 
-void client_serve(int sock, struct buf * clients)
+void client_serve(int sock, struct buf * clients, struct buf * polls, size_t sock_idx_in_polls)
 {
+    // TODO this whole thing should be only used while under a lock
+
     printf("client_serve: sock %d\n", sock);
 
     struct client * client = NULL;
@@ -66,4 +68,6 @@ void client_serve(int sock, struct buf * clients)
     printf("client_serve: from %d: `%s`\n", sock, msg);
 
     client_deinit(client, clients);
+
+    buf_removeat(polls, sock_idx_in_polls);
 }

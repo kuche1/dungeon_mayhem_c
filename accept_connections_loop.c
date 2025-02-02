@@ -18,18 +18,23 @@ void accept_connections_loop(int * shutting_down, struct net * net, struct buf *
 
         printf("accept_connections_loop: client pick up (%d)\n", sock);
 
-        client_init(sock, clients);
+        struct client * client;
+        client_init(sock, clients, & client);
 
-        {
-            ssize_t ret = write(clients_update_eventfd, &(uint64_t){1}, sizeof(uint64_t));
-            if(ret < 0){
-                perror("ERROR: accept_connections_loop: write to eventfd failed");
-                exit(1);
-            }
-            if(ret != sizeof(uint64_t)){
-                fprintf(stderr, "ERROR: accept_connections_loop: could not write full data to eventfd\n");
-                exit(1);
-            }
+        // TODO make into compiletime assert
+        if(sizeof(client) != sizeof(uint64_t)){
+            fprintf(stderr, "ERROR: accept_connections_loop: sizeof(client) != sizeof(uint64_t)\n");
+            exit(1);
+        }
+
+        ssize_t written = write(clients_update_eventfd, & client, sizeof(client));
+        if(written < 0){
+            perror("ERROR: accept_connections_loop: write to eventfd failed");
+            exit(1);
+        }
+        if(written != sizeof(client)){
+            fprintf(stderr, "ERROR: accept_connections_loop: could not write full data to eventfd\n");
+            exit(1);
         }
 
         printf("accept_connections_loop: buf len %ld\n", clients->len);
